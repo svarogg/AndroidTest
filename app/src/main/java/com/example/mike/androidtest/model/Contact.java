@@ -2,10 +2,12 @@ package com.example.mike.androidtest.model;
 
 import android.content.ContentResolver;
 
+import java.io.Serializable;
+
 /**
  * Created by Mike on 14/10/2015.
  */
-public class Contact {
+public class Contact implements Serializable {
     private int id;
     private String name;
     private String phoneNumber;
