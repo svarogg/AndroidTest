@@ -8,13 +8,14 @@ import android.provider.ContactsContract;
 
 import com.example.mike.androidtest.model.Contact;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Created by Mike on 14/10/2015.
  */
-public class ContactHandler {
+public class ContactHandler implements Serializable {
     public static List<Contact> getContacts(Context context){
         final ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);

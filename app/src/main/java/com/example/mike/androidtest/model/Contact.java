@@ -1,13 +1,15 @@
 package com.example.mike.androidtest.model;
 
 import android.content.ContentResolver;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.io.Serializable;
 
 /**
  * Created by Mike on 14/10/2015.
  */
-public class Contact implements Serializable {
+public class Contact implements Parcelable, Serializable {
     private int id;
     private String name;
     private String phoneNumber;
@@ -16,6 +18,40 @@ public class Contact implements Serializable {
 
     private Loader emailLoader;
     private Loader phoneNumberLoader;
+
+    protected Contact(Parcel in) {
+        id = in.readInt();
+        name = in.readString();
+        phoneNumber = in.readString();
+        emailAddress = in.readString();
+        imageUrl = in.readString();
+    }
+
+    public static final Creator<Contact> CREATOR = new Creator<Contact>() {
+        @Override
+        public Contact createFromParcel(Parcel in) {
+            return new Contact(in);
+        }
+
+        @Override
+        public Contact[] newArray(int size) {
+            return new Contact[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(name);
+        dest.writeString(phoneNumber);
+        dest.writeString(emailAddress);
+        dest.writeString(imageUrl);
+    }
 
     public interface Loader{
         public String loadString(int contactId);
