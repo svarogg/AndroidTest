@@ -1,24 +1,36 @@
 package com.example.mike.androidtest.model;
 
+import android.content.ContentResolver;
+
 /**
  * Created by Mike on 14/10/2015.
  */
 public class Contact {
-    private String id;
+    private int id;
     private String name;
     private String phoneNumber;
     private String emailAddress;
     private String imageUrl;
 
-    public Contact(String id, String name, String phoneNumber, String emailAddress, String imageUrl){
+    private Loader emailLoader;
+    private Loader phoneNumberLoader;
+
+    public interface Loader{
+        public String loadString(int contactId);
+    }
+
+    public Contact(int id, String name, String imageUrl, Loader emailLoader, Loader phoneNumberLoader){
         this.id = id;
         this.name = name;
-        this.phoneNumber = phoneNumber;
-        this.emailAddress = emailAddress;
+        this.emailLoader = emailLoader;
+        this.phoneNumberLoader = phoneNumberLoader;
         this.imageUrl = imageUrl;
     }
 
     public String getEmailAddress() {
+        if(emailAddress == null){
+            setEmailAddress(emailLoader.loadString(id));
+        }
         return emailAddress;
     }
 
@@ -27,6 +39,10 @@ public class Contact {
     }
 
     public String getPhoneNumber() {
+        if(phoneNumber == null){
+            setPhoneNumber(phoneNumberLoader.loadString(id));
+        }
+
         return phoneNumber;
     }
 
@@ -50,11 +66,11 @@ public class Contact {
         this.imageUrl = imageUrl;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 }

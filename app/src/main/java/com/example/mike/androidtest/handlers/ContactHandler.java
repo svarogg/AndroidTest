@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class ContactHandler {
     public static List<Contact> getContacts(Context context){
-        ContentResolver contentResolver = context.getContentResolver();
+        final ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
 
         final int displayNameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
@@ -28,12 +28,21 @@ public class ContactHandler {
             int id = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts._ID));
             String name = cursor.getString(displayNameIndex);
             String imageUrl = cursor.getString(photoUrlIndex);
-//            String phoneNumber = getPhoneNumber(contentResolver, Integer.toString(id));
-//            String emailAddress = getEmailAddress(contentResolver, Integer.toString(id));
-            String phoneNumber = "151151551";
-            String emailAddress = "feanorr@gmail.com";
 
-            contacts.add(new Contact(Integer.toString(id), name, phoneNumber, emailAddress, imageUrl));
+            Contact.Loader emailAddressLoader = new Contact.Loader() {
+                @Override
+                public String loadString(int contactId) {
+                    return getEmailAddress(contentResolver, Integer.toString(contactId));
+                }
+            };
+            Contact.Loader phoneNumberLoader = new Contact.Loader() {
+                @Override
+                public String loadString(int contactId) {
+                    return getPhoneNumber(contentResolver, Integer.toString(contactId));
+                }
+            };
+
+            contacts.add(new Contact(id, name, imageUrl, emailAddressLoader, phoneNumberLoader));
         }
 
         return contacts;
