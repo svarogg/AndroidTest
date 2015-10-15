@@ -2,12 +2,14 @@ package com.example.mike.androidtest;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.net.Uri;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -42,17 +44,22 @@ public class ContactListActivity extends AppCompatActivity {
             ((TextView)layout.findViewById(R.id.contactNameView)).setText(contact.getName());
 
             String phoneNumber = contact.getPhoneNumber();
-            if(phoneNumber!=null){
+            if(phoneNumber != null){
                 ((TextView)layout.findViewById(R.id.phoneNumberView)).setText(phoneNumber);
             }else{
                 layout.findViewById(R.id.phoneNumberContainer).setVisibility(View.GONE);
             }
 
             String emailAddress = contact.getEmailAddress();
-            if(emailAddress!=null){
+            if(emailAddress != null){
                 ((TextView)layout.findViewById(R.id.emailAddressView)).setText(emailAddress);
             }else{
                 layout.findViewById(R.id.emailAddressContainer).setVisibility(View.GONE);
+            }
+
+            String imageUrl = contact.getImageUrl();
+            if(imageUrl != null){
+                ((ImageView)layout.findViewById(R.id.contactImageView)).setImageURI(Uri.parse(imageUrl));
             }
             
             builder.setView(layout);

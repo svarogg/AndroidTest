@@ -8,8 +8,8 @@
         android:layout_gravity="center"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:src="@mipmap/question_mark" />
-
+        android:src="@mipmap/question_mark"
+        />
     <TextView
         android:id="@+id/contactNameView"
         android:layout_gravity="center"
