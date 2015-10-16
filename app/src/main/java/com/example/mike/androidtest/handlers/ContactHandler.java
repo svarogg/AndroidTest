@@ -3,8 +3,12 @@ package com.example.mike.androidtest.handlers;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.provider.ContactsContract;
+import android.widget.Toast;
 
 import com.example.mike.androidtest.model.Contact;
 
@@ -15,7 +19,7 @@ import java.util.List;
 /**
  * Created by Mike on 14/10/2015.
  */
-public class ContactHandler implements Serializable {
+public class ContactHandler {
     public static List<Contact> getContacts(Context context){
         final ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
@@ -33,13 +37,13 @@ public class ContactHandler implements Serializable {
             Contact.Loader emailAddressLoader = new Contact.Loader() {
                 @Override
                 public String loadString(int contactId) {
-                    return getEmailAddress(contentResolver, Integer.toString(contactId));
+                    return resolveEmailAddress(contentResolver, Integer.toString(contactId));
                 }
             };
             Contact.Loader phoneNumberLoader = new Contact.Loader() {
                 @Override
                 public String loadString(int contactId) {
-                    return getPhoneNumber(contentResolver, Integer.toString(contactId));
+                    return resolvePhoneNumber(contentResolver, Integer.toString(contactId));
                 }
             };
 
@@ -49,7 +53,7 @@ public class ContactHandler implements Serializable {
         return contacts;
     }
 
-    private static String getEmailAddress(ContentResolver contentResolver, String contactId) {
+    private static String resolveEmailAddress(ContentResolver contentResolver, String contactId) {
         Cursor emailCursor = contentResolver.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI, null,
                 ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{contactId}, null);
         try {
@@ -61,7 +65,7 @@ public class ContactHandler implements Serializable {
         }
     }
 
-    private static String getPhoneNumber(ContentResolver contentResolver, String contactId) {
+    private static String resolvePhoneNumber(ContentResolver contentResolver, String contactId) {
         Cursor phoneNumberCursor = contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                 ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{contactId}, null);
 
@@ -73,5 +77,32 @@ public class ContactHandler implements Serializable {
         finally {
             phoneNumberCursor.close();
         }
+    }
+
+    public static void emailContact(Context context, Contact contact) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("message/rfc822");
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{contact.getEmailAddress()});
+
+        context.startActivity(intent);
+    }
+
+    public static void smsContact(Context context, Contact contact) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse("sms:" + contact.getPhoneNumber()));
+
+        context.startActivity(intent);
+    }
+
+    public static void callContact(Context context, Contact contact) {
+        if(context.checkCallingOrSelfPermission("android.permission.CALL_PHONE") != PackageManager.PERMISSION_GRANTED){
+            Toast.makeText(context, "User denied permission to call contact", Toast.LENGTH_SHORT);
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_CALL);
+        intent.setData(Uri.parse("tel:" + contact.getPhoneNumber()));
+
+        context.startActivity(intent);
     }
 }

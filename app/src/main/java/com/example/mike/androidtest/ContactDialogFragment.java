@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mike.androidtest.handlers.ContactHandler;
 import com.example.mike.androidtest.model.Contact;
 
 public class ContactDialogFragment extends DialogFragment {
@@ -43,14 +44,14 @@ public class ContactDialogFragment extends DialogFragment {
             layout.findViewById(R.id.phoneButton).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    callContact(contact);
+                    ContactHandler.callContact(getContext(), contact);
                 }
             });
 
             layout.findViewById(R.id.smsButton).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    smsContact(contact);
+                    ContactHandler.smsContact(getContext(), contact);
                 }
             });
         }else{
@@ -63,7 +64,7 @@ public class ContactDialogFragment extends DialogFragment {
             layout.findViewById(R.id.emailButton).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    emailContact(contact);
+                    ContactHandler.emailContact(getContext(), contact);
                 }
             });
         }else{
@@ -78,29 +79,5 @@ public class ContactDialogFragment extends DialogFragment {
         builder.setView(layout);
 
         return builder.create();
-    }
-
-    private void emailContact(Contact contact) {
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("message/rfc822");
-        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{contact.getEmailAddress()});
-
-        startActivity(intent);
-    }
-
-    private void smsContact(Contact contact) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("sms:" + contact.getPhoneNumber()));
-//        intent.putExtra("address", contact.getPhoneNumber());
-
-        startActivity(intent);
-    }
-
-    private void callContact(Contact contact) {
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        intent.setData(Uri.parse("tel:" + contact.getPhoneNumber()));
-//        intent.putExtra("address", contact.getPhoneNumber());
-
-        startActivity(intent);
     }
 }
