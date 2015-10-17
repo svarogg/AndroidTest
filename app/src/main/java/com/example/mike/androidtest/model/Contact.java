@@ -57,6 +57,14 @@ public class Contact implements Parcelable, Serializable {
         public String loadString(int contactId);
     }
 
+    public Contact(int id, String name, String imageUrl, String emailAddress, String phoneNumber){
+        this.id = id;
+        this.name = name;
+        this.emailAddress = emailAddress;
+        this.phoneNumber = phoneNumber;
+        this.imageUrl = imageUrl;
+    }
+
     public Contact(int id, String name, String imageUrl, Loader emailLoader, Loader phoneNumberLoader){
         this.id = id;
         this.name = name;
@@ -66,7 +74,7 @@ public class Contact implements Parcelable, Serializable {
     }
 
     public String getEmailAddress() {
-        if(emailAddress == null){
+        if(emailAddress == null && emailLoader != null){
             setEmailAddress(emailLoader.loadString(id));
         }
         return emailAddress;
@@ -77,7 +85,7 @@ public class Contact implements Parcelable, Serializable {
     }
 
     public String getPhoneNumber() {
-        if(phoneNumber == null){
+        if(phoneNumber == null && phoneNumberLoader != null){
             setPhoneNumber(phoneNumberLoader.loadString(id));
         }
 

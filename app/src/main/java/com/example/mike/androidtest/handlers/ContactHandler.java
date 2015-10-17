@@ -7,20 +7,38 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.ContactsContract;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.mike.androidtest.functors.ObjToVoidFunctor;
 import com.example.mike.androidtest.model.Contact;
 
-import java.io.Serializable;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Mike on 14/10/2015.
  */
 public class ContactHandler {
-    public static List<Contact> getContacts(Context context){
+    private static final String CONTACTS_SERVER_URL = "http://1-dot-vimi-demo-chat-server.appspot.com/stam";
+
+    public static List<Contact> getContacts(Context context) {
         final ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
 
@@ -29,7 +47,7 @@ public class ContactHandler {
 
         LinkedList<Contact> contacts = new LinkedList<Contact>();
 
-        while(cursor.moveToNext()){
+        while (cursor.moveToNext()) {
             int id = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts._ID));
             String name = cursor.getString(displayNameIndex);
             String imageUrl = cursor.getString(photoUrlIndex);
@@ -60,7 +78,7 @@ public class ContactHandler {
             return emailCursor.moveToFirst()
                     ? emailCursor.getString(emailCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                     : null;
-        }finally {
+        } finally {
             emailCursor.close();
         }
     }
@@ -73,8 +91,7 @@ public class ContactHandler {
             return phoneNumberCursor.moveToFirst()
                     ? phoneNumberCursor.getString(phoneNumberCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                     : null;
-        }
-        finally {
+        } finally {
             phoneNumberCursor.close();
         }
     }
@@ -95,7 +112,7 @@ public class ContactHandler {
     }
 
     public static void callContact(Context context, Contact contact) {
-        if(context.checkCallingOrSelfPermission("android.permission.CALL_PHONE") != PackageManager.PERMISSION_GRANTED){
+        if (context.checkCallingOrSelfPermission("android.permission.CALL_PHONE") != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(context, "User denied permission to call contact", Toast.LENGTH_SHORT);
             return;
         }
@@ -104,5 +121,44 @@ public class ContactHandler {
         intent.setData(Uri.parse("tel:" + contact.getPhoneNumber()));
 
         context.startActivity(intent);
+    }
+
+    public static void loadFromServer(Context context, final ObjToVoidFunctor<List<Contact>> successCallback, final ObjToVoidFunctor<Exception> errorCallback) {
+        RequestQueue queue = Volley.newRequestQueue(context);
+        StringRequest request = new StringRequest(Request.Method.POST, CONTACTS_SERVER_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                successCallback.execute(parseRawContacts(response));
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                errorCallback.execute(error);
+            }
+        });
+        queue.add(request);
+    }
+
+    private static String parseContactToken(String token){
+        return token.equals("unknown") ? null : token;
+    }
+
+    private static List<Contact> parseRawContacts(String rawContacts) {
+        List<Contact> parsedContacts = new LinkedList<Contact>();
+
+        Pattern regex = Pattern.compile("([^,]*), ([^,]*), ([^,]*), ([^,]*)");
+        Scanner scanner = new Scanner(rawContacts);
+        for(int i = 0; scanner.hasNext(); i++){
+            Matcher matcher = regex.matcher(scanner.nextLine());
+            if(matcher.find()) {
+                parsedContacts.add(new Contact(i,
+                        parseContactToken(matcher.group(1)),
+                        parseContactToken(matcher.group(4)),
+                        parseContactToken(matcher.group(2)),
+                        parseContactToken(matcher.group(3))));
+            }
+        }
+
+        return parsedContacts;
     }
 }

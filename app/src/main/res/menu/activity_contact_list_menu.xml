@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:androidTest="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_load_from_server"
+        androidTest:showAsAction="always"
+        android:icon="@mipmap/download"
+        android:title="Load From Server" />
+
+</menu>
