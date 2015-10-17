@@ -30,28 +30,11 @@ public class ContactListAdapter extends BaseAdapter {
     private static LayoutInflater inflater;
     private ImageLoader imageLoader;
 
-    public ContactListAdapter(Context context, List<Contact> contacts) {
+    public ContactListAdapter(Context context, ImageLoader imageLoader, List<Contact> contacts) {
         this.context = context;
         this.contacts = contacts;
         inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        imageLoader = prepareImageLoader(context);
-    }
-
-    private ImageLoader prepareImageLoader(Context context) {
-        RequestQueue requestQueue = Volley.newRequestQueue(context);
-        ImageLoader.ImageCache imageCache = new ImageLoader.ImageCache() {
-            private final LruCache<String, Bitmap> cache = new LruCache<>(10);
-            @Override
-            public Bitmap getBitmap(String url) {
-                return cache.get(url);
-            }
-
-            @Override
-            public void putBitmap(String url, Bitmap bitmap) {
-                cache.put(url, bitmap);
-            }
-        };
-        return new ImageLoader(requestQueue, imageCache);
+        this.imageLoader = imageLoader;
     }
 
     @Override

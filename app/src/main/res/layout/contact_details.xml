@@ -26,6 +26,16 @@
             android:layout_gravity="right"
             android:src="@mipmap/question_mark"
             />
+        <com.android.volley.toolbox.NetworkImageView
+            android:id="@+id/contactNetworkImageView"
+            android:layout_alignParentRight="true"
+            android:layout_margin="5dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="right"
+            android:src="@mipmap/question_mark"
+            android:visibility="gone"
+            />
     </RelativeLayout>
     <RelativeLayout
         android:id="@+id/phoneNumberContainer"

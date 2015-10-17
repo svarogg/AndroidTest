@@ -5,11 +5,13 @@ import android.app.Dialog;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.StrictMode;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.LruCache;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,6 +27,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.Volley;
 import com.example.mike.androidtest.adapters.ContactListAdapter;
 import com.example.mike.androidtest.functors.ObjToVoidFunctor;
 import com.example.mike.androidtest.handlers.ContactHandler;
@@ -35,6 +40,24 @@ import java.util.List;
 
 public class ContactListActivity extends AppCompatActivity {
     private List<Contact> contacts;
+    private ImageLoader imageLoader;
+
+    private ImageLoader prepareImageLoader(Context context) {
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        ImageLoader.ImageCache imageCache = new ImageLoader.ImageCache() {
+            private final LruCache<String, Bitmap> cache = new LruCache<>(10);
+            @Override
+            public Bitmap getBitmap(String url) {
+                return cache.get(url);
+            }
+
+            @Override
+            public void putBitmap(String url, Bitmap bitmap) {
+                cache.put(url, bitmap);
+            }
+        };
+        return new ImageLoader(requestQueue, imageCache);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -63,7 +86,7 @@ public class ContactListActivity extends AppCompatActivity {
             public void execute(List<Contact> contacts) {
                 context.setContacts(contacts);
                 ListView contactsListView = (ListView) findViewById(R.id.contactsListView);
-                ContactListAdapter contactListAdapter = new ContactListAdapter(context, contacts);
+                ContactListAdapter contactListAdapter = new ContactListAdapter(context, imageLoader, contacts);
                 contactsListView.setAdapter(contactListAdapter);
                 contactListAdapter.notifyDataSetChanged();
             }
@@ -77,8 +100,11 @@ public class ContactListActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        final ContactListActivity context = this;
         super.onCreate(savedInstanceState);
+
+        imageLoader = prepareImageLoader(this);
+
+        final ContactListActivity context = this;
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
@@ -87,13 +113,13 @@ public class ContactListActivity extends AppCompatActivity {
 
         contacts = ContactHandler.getContacts(this);
         ListView contactsListView = (ListView)findViewById(R.id.contactsListView);
-        contactsListView.setAdapter(new ContactListAdapter(this, contacts));
+        contactsListView.setAdapter(new ContactListAdapter(this, imageLoader, contacts));
 
         contactsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Contact contact = context.getContacts().get(position);
-                ContactDialogFragment.create(contact).show(getSupportFragmentManager(), "contact");
+                ContactDialogFragment.create(contact, context.imageLoader).show(getSupportFragmentManager(), "contact");
             }
         });
 
@@ -108,7 +134,11 @@ public class ContactListActivity extends AppCompatActivity {
                 Contact contact = context.getContacts().get(position);
 
                 ClipData data = ClipData.newPlainText("phoneNumber", contact.getPhoneNumber());
-                View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view.findViewById(R.id.contactImageView));
+                String imageUrl = contact.getImageUrl();
+                View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view.findViewById(
+                        imageUrl != null && !imageUrl.startsWith("content://")
+                            ? R.id.contactNetworkImageView
+                            : R.id.contactImageView));
                 view.startDrag(data, shadowBuilder, view, 0);
 
                 onDragMenu.setVisibility(View.VISIBLE);

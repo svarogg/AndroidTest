@@ -12,19 +12,23 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
 import com.example.mike.androidtest.handlers.ContactHandler;
 import com.example.mike.androidtest.model.Contact;
 
 public class ContactDialogFragment extends DialogFragment {
     private static final String CONTACT_KEY = "contact";
     private Contact contact;
+    private ImageLoader imageLoader;
 
-    public static ContactDialogFragment create(Contact contact){
+    public static ContactDialogFragment create(Contact contact, ImageLoader imageLoader){
         ContactDialogFragment fragment = new ContactDialogFragment();
 
         Bundle bundle = new Bundle();
         bundle.putSerializable(CONTACT_KEY, contact);
         fragment.setArguments(bundle);
+        fragment.setImageLoader(imageLoader);
 
         return fragment;
     }
@@ -72,12 +76,28 @@ public class ContactDialogFragment extends DialogFragment {
         }
 
         String imageUrl = contact.getImageUrl();
+        ImageView contactImageView = (ImageView)layout.findViewById(R.id.contactImageView);
+        NetworkImageView contactNetworkImageView = (NetworkImageView)layout.findViewById(R.id.contactNetworkImageView);
         if(imageUrl != null){
-            ((ImageView)layout.findViewById(R.id.contactImageView)).setImageURI(Uri.parse(imageUrl));
+            if(imageUrl.startsWith("content://")) {
+                contactImageView.setImageURI(Uri.parse(imageUrl));
+            }else{
+                contactImageView.setVisibility(View.GONE);
+                contactNetworkImageView.setVisibility(View.VISIBLE);
+                contactNetworkImageView.setImageUrl(imageUrl, imageLoader);
+            }
         }
 
         builder.setView(layout);
 
         return builder.create();
+    }
+
+    public ImageLoader getImageLoader() {
+        return imageLoader;
+    }
+
+    public void setImageLoader(ImageLoader imageLoader) {
+        this.imageLoader = imageLoader;
     }
 }
