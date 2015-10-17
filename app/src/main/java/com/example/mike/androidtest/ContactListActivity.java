@@ -70,7 +70,7 @@ public class ContactListActivity extends AppCompatActivity {
         }, new ObjToVoidFunctor<Exception>() {
             @Override
             public void execute(Exception arg) {
-                Toast.makeText(context, "Failed to load contacts from server.\n Please check your internet connection.", Toast.LENGTH_SHORT);
+                Toast.makeText(context, "Failed to load contacts from server.\nPlease check your internet connection.", Toast.LENGTH_SHORT).show();
             }
         });
     }

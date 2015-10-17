@@ -3,6 +3,14 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="horizontal" >
+    <com.android.volley.toolbox.NetworkImageView
+        android:id="@+id/contactNetworkImageView"
+        android:layout_gravity="center"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@mipmap/question_mark"
+        android:visibility="gone"
+        />
     <ImageView
         android:id="@+id/contactImageView"
         android:layout_gravity="center"
