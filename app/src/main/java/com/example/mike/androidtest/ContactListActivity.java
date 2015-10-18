@@ -1,29 +1,20 @@
 package com.example.mike.androidtest;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.ClipData;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.StrictMode;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.LruCache;
 import android.view.DragEvent;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,10 +23,10 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 import com.example.mike.androidtest.adapters.ContactListAdapter;
 import com.example.mike.androidtest.functors.ObjToVoidFunctor;
+import com.example.mike.androidtest.functors.VoidToVoidFunctor;
 import com.example.mike.androidtest.handlers.ContactHandler;
 import com.example.mike.androidtest.model.Contact;
 
-import java.io.IOException;
 import java.util.List;
 
 public class ContactListActivity extends AppCompatActivity {
@@ -124,14 +115,13 @@ public class ContactListActivity extends AppCompatActivity {
         });
 
         final View onDragMenu = findViewById(R.id.onDragMenu);
-
         onDragMenu.bringToFront();
         onDragMenu.setOnDragListener(new MainDragListener(onDragMenu));
 
         contactsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Contact contact = context.getContacts().get(position);
+                final Contact contact = context.getContacts().get(position);
 
                 ClipData data = ClipData.newPlainText("phoneNumber", contact.getPhoneNumber());
                 String imageUrl = contact.getImageUrl();
@@ -142,6 +132,60 @@ public class ContactListActivity extends AppCompatActivity {
                 view.startDrag(data, shadowBuilder, view, 0);
 
                 onDragMenu.setVisibility(View.VISIBLE);
+
+                View dragButtonsContainer = onDragMenu.findViewById(R.id.dragButtonsContainer);
+                final TextView dragText = (TextView) onDragMenu.findViewById(R.id.dragText);
+                if(contact.hasPhoneNumber()) {
+                    dragText.setText("");
+                    dragButtonsContainer.setVisibility(View.VISIBLE);
+                    View callButton = onDragMenu.findViewById(R.id.callDragButton);
+                    View smsButton = onDragMenu.findViewById(R.id.smsDragButton);
+                    setDragEvent(callButton, onDragMenu, dragText, "Call", new VoidToVoidFunctor() {
+                        @Override
+                        public void execute() {
+                            ContactHandler.callContact(context, contact);
+                        }
+                    });
+                    setDragEvent(smsButton, onDragMenu, dragText, "SMS", new VoidToVoidFunctor() {
+                        @Override
+                        public void execute() {
+                            ContactHandler.smsContact(context, contact);
+                        }
+                    });
+                }else{
+                    dragButtonsContainer.setVisibility(View.GONE);
+                    dragText.setText("No Phone Number");
+                }
+
+                return true;
+            }
+        });
+    }
+
+    private void setDragEvent(View button, final View onDragMenu, final TextView dragText, final String hoverText, final VoidToVoidFunctor dropCallback) {
+        button.setOnDragListener(new View.OnDragListener() {
+            @Override
+            public boolean onDrag(View v, DragEvent event) {
+                final int action = event.getAction();
+                switch (action) {
+                    case DragEvent.ACTION_DRAG_EXITED:
+                        dragText.setText("");
+                        break;
+                    case DragEvent.ACTION_DRAG_ENTERED:
+                        dragText.setText(hoverText);
+                        break;
+                    case DragEvent.ACTION_DROP:
+                        if(dropCallback!= null) {
+                            dropCallback.execute();
+                        }
+                        break;
+                    case DragEvent.ACTION_DRAG_ENDED:
+                        dragText.setText("");
+                        onDragMenu.setVisibility(View.GONE);
+                        break;
+                    default:
+                        break;
+                }
                 return true;
             }
         });

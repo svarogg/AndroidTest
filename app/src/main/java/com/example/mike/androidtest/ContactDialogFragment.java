@@ -2,7 +2,6 @@ package com.example.mike.androidtest;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -10,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
@@ -45,7 +43,7 @@ public class ContactDialogFragment extends DialogFragment {
         String phoneNumber = contact.getPhoneNumber();
         if(phoneNumber != null){
             ((TextView)layout.findViewById(R.id.phoneNumberView)).setText(phoneNumber);
-            layout.findViewById(R.id.phoneButton).setOnClickListener(new View.OnClickListener() {
+            layout.findViewById(R.id.callButton).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     ContactHandler.callContact(getContext(), contact);

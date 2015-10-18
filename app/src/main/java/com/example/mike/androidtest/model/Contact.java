@@ -119,4 +119,13 @@ public class Contact implements Parcelable, Serializable {
     public void setId(int id) {
         this.id = id;
     }
+
+    public boolean hasPhoneNumber(){
+        return getPhoneNumber() != null;
+    }
+
+    public boolean hasEmailAddress(){
+        return getEmailAddress() != null;
+    }
+
 }

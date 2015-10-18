@@ -64,7 +64,7 @@
                 android:id="@+id/phoneNumberView"/>
         </LinearLayout>
         <ImageView
-            android:id="@+id/phoneButton"
+            android:id="@+id/callButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@mipmap/phone_icon"
