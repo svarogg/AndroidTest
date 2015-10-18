@@ -8,8 +8,11 @@
         android:id="@+id/onDragMenu"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="@color/transparentWhite"
         android:visibility="gone">
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="@color/transparentWhite"/>
         <TextView
             android:id="@+id/dragText"
             android:layout_width="fill_parent"

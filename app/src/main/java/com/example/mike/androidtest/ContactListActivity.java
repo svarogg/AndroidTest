@@ -3,6 +3,7 @@ package com.example.mike.androidtest;
 import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import com.android.volley.toolbox.Volley;
 import com.example.mike.androidtest.adapters.ContactListAdapter;
 import com.example.mike.androidtest.functors.ObjToVoidFunctor;
 import com.example.mike.androidtest.functors.VoidToVoidFunctor;
+import com.example.mike.androidtest.handlers.BlurHandler;
 import com.example.mike.androidtest.handlers.ContactHandler;
 import com.example.mike.androidtest.model.Contact;
 
@@ -118,6 +120,8 @@ public class ContactListActivity extends AppCompatActivity {
         onDragMenu.bringToFront();
         onDragMenu.setOnDragListener(new MainDragListener(onDragMenu));
 
+        final View contactListContainer = findViewById(R.id.contactListContainer);
+
         contactsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -132,6 +136,7 @@ public class ContactListActivity extends AppCompatActivity {
                 view.startDrag(data, shadowBuilder, view, 0);
 
                 onDragMenu.setVisibility(View.VISIBLE);
+                onDragMenu.setBackground(new BitmapDrawable(context.getResources(), BlurHandler.blur(contactListContainer, 1f, 10)));
 
                 View dragButtonsContainer = onDragMenu.findViewById(R.id.dragButtonsContainer);
                 final TextView dragText = (TextView) onDragMenu.findViewById(R.id.dragText);
