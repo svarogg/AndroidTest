@@ -78,11 +78,17 @@ public class ContactListActivity extends AppCompatActivity {
         ContactHandler.loadFromServer(this.getBaseContext(), new ObjToVoidFunctor<List<Contact>>() {
             @Override
             public void execute(List<Contact> contacts) {
-                context.setContacts(contacts);
-                ListView contactsListView = (ListView) findViewById(R.id.contactsListView);
-                ContactListAdapter contactListAdapter = new ContactListAdapter(context, imageLoader, contacts);
-                contactsListView.setAdapter(contactListAdapter);
-                contactListAdapter.notifyDataSetChanged();
+                for (Contact contact: contacts) {
+                    if(!ContactHandler.hasContact(context, contact.getName())){
+                        try {
+                            ContactHandler.addContact(context, contact);
+                        }catch(Exception e){
+                            Toast.makeText(context, "Failed to add contacts to contact list", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+                }
+                updateContactsList();
             }
         }, new ObjToVoidFunctor<Exception>() {
             @Override
@@ -105,10 +111,9 @@ public class ContactListActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_contact_list);
 
-        contacts = ContactHandler.getContacts(this);
-        ListView contactsListView = (ListView)findViewById(R.id.contactsListView);
-        contactsListView.setAdapter(new ContactListAdapter(this, imageLoader, contacts));
+        updateContactsList();
 
+        ListView contactsListView = (ListView)findViewById(R.id.contactsListView);
         contactsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -169,6 +174,14 @@ public class ContactListActivity extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    private void updateContactsList() {
+        ListView contactsListView = (ListView)findViewById(R.id.contactsListView);
+        setContacts(ContactHandler.getContacts(this));
+        ContactListAdapter adapter = new ContactListAdapter(this, imageLoader, contacts);
+        contactsListView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
     }
 
     private void setDragEvent(View button, final View onDragMenu, final TextView dragText, final String hoverText, final VoidToVoidFunctor dropCallback) {

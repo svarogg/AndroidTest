@@ -1,15 +1,20 @@
 package com.example.mike.androidtest.handlers;
 
 
+import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Environment;
+import android.os.RemoteException;
 import android.provider.ContactsContract;
-import android.widget.Toast;
+import android.support.annotation.NonNull;
+import android.provider.ContactsContract.Data;
+import android.provider.ContactsContract.RawContacts;
+import android.provider.ContactsContract.CommonDataKinds.StructuredName;
+import android.provider.ContactsContract.CommonDataKinds.Email;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -20,12 +25,7 @@ import com.android.volley.toolbox.Volley;
 import com.example.mike.androidtest.functors.ObjToVoidFunctor;
 import com.example.mike.androidtest.model.Contact;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -48,27 +48,77 @@ public class ContactHandler {
         LinkedList<Contact> contacts = new LinkedList<Contact>();
 
         while (cursor.moveToNext()) {
-            int id = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-            String name = cursor.getString(displayNameIndex);
-            String imageUrl = cursor.getString(photoUrlIndex);
-
-            Contact.Loader emailAddressLoader = new Contact.Loader() {
-                @Override
-                public List<String> loadList(int contactId) {
-                    return resolveEmailAddresses(contentResolver, Integer.toString(contactId));
-                }
-            };
-            Contact.Loader phoneNumberLoader = new Contact.Loader() {
-                @Override
-                public List<String> loadList(int contactId) {
-                    return resolvePhoneNumbers(contentResolver, Integer.toString(contactId));
-                }
-            };
-
-            contacts.add(new Contact(id, name, imageUrl, emailAddressLoader, phoneNumberLoader));
+            contacts.add(getContactFromCursor(contentResolver, displayNameIndex, photoUrlIndex, cursor));
         }
 
         return contacts;
+    }
+
+    @NonNull
+    private static Contact getContactFromCursor(final ContentResolver contentResolver, int displayNameIndex, int photoUrlIndex, Cursor cursor) {
+        int id = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+        String name = cursor.getString(displayNameIndex);
+        String imageUrl = cursor.getString(photoUrlIndex);
+
+        Contact.Loader emailAddressLoader = new Contact.Loader() {
+            @Override
+            public List<String> loadList(int contactId) {
+                return resolveEmailAddresses(contentResolver, Integer.toString(contactId));
+            }
+        };
+        Contact.Loader phoneNumberLoader = new Contact.Loader() {
+            @Override
+            public List<String> loadList(int contactId) {
+                return resolvePhoneNumbers(contentResolver, Integer.toString(contactId));
+            }
+        };
+
+        return new Contact(id, name, imageUrl, emailAddressLoader, phoneNumberLoader);
+    }
+
+    public static void addContact(Context context, Contact contact) throws RemoteException, OperationApplicationException {
+        final ContentResolver contentResolver = context.getContentResolver();
+
+        ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+        ops.add(ContentProviderOperation
+                .newInsert(RawContacts.CONTENT_URI)
+                .withValue(RawContacts.ACCOUNT_TYPE, null)
+                .withValue(RawContacts.ACCOUNT_NAME, null)
+                .build());
+        ops.add(ContentProviderOperation
+                .newInsert(Data.CONTENT_URI)
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
+                .withValue(StructuredName.DISPLAY_NAME, contact.getName()).build());
+        for (String phoneNumber : contact.getPhoneNumbers()) {
+            ops.add(ContentProviderOperation
+                    .newInsert(Data.CONTENT_URI)
+                    .withValueBackReference(Data.RAW_CONTACT_ID, 0)
+                    .withValue(Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
+                    .withValue(Phone.NUMBER, phoneNumber)
+                    .withValue(Phone.TYPE, Phone.TYPE_HOME)
+                    .build());
+        }
+        for(String emailAddress : contact.getEmailAddresses()){
+            ops.add(ContentProviderOperation
+                    .newInsert(Data.CONTENT_URI)
+                    .withValueBackReference(Data.RAW_CONTACT_ID, 0)
+                    .withValue(Data.MIMETYPE, Email.CONTENT_ITEM_TYPE)
+                    .withValue(Email.TYPE, Email.TYPE_HOME)
+                    .withValue(Email.DATA, emailAddress)
+                    .build());
+        }
+        contentResolver.applyBatch(ContactsContract.AUTHORITY, ops);
+    }
+
+    public static boolean hasContact(Context context, String name){
+        ContentResolver contentResolver = context.getContentResolver();
+        String[] projection = new String[] { ContactsContract.PhoneLookup._ID };
+        String selection = StructuredName.DISPLAY_NAME + " = ?";
+        String[] selectionArguments = { name };
+        Cursor cursor = contentResolver.query(Data.CONTENT_URI, projection, selection, selectionArguments, null);
+
+        return cursor.getCount() > 0;
     }
 
     private static List<String> resolveEmailAddresses(ContentResolver contentResolver, String contactId) {
