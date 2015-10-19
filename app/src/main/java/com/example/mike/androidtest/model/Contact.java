@@ -63,8 +63,12 @@ public class Contact implements Parcelable, Serializable {
     public Contact(int id, String name, String imageUrl, String emailAddress, String phoneNumber){
         this.id = id;
         this.name = name;
-        this.emailAddresses = new LinkedList<>(Arrays.asList(emailAddress)) ;
-        this.phoneNumbers = new LinkedList<>(Arrays.asList(phoneNumber));
+        this.emailAddresses = emailAddress == null
+                ? new LinkedList<String>()
+                : new LinkedList<String>(Arrays.asList(emailAddress));
+        this.phoneNumbers = phoneNumber == null
+                ? new LinkedList<String>()
+                : new LinkedList<>(Arrays.asList(phoneNumber));
         this.imageUrl = imageUrl;
     }
 

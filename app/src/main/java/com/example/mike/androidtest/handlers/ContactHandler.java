@@ -6,6 +6,8 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
@@ -15,6 +17,7 @@ import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.provider.ContactsContract.CommonDataKinds.Photo;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -25,6 +28,12 @@ import com.android.volley.toolbox.Volley;
 import com.example.mike.androidtest.functors.ObjToVoidFunctor;
 import com.example.mike.androidtest.model.Contact;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -108,6 +117,26 @@ public class ContactHandler {
                     .withValue(Email.DATA, emailAddress)
                     .build());
         }
+        String imageUrl = contact.getImageUrl();
+        if(imageUrl != null){
+            try {
+                Bitmap bitmap = BitmapHandler.downloadBitmap(imageUrl);
+                bitmap = BitmapHandler.resizeBitmap(bitmap, 720, 720);
+                ByteArrayOutputStream imageByteArrayOutputStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, imageByteArrayOutputStream);
+                ops.add(ContentProviderOperation
+                        .newInsert(Data.CONTENT_URI)
+                        .withValueBackReference(Data.RAW_CONTACT_ID, 0)
+                        .withValue(Data.MIMETYPE, Photo.CONTENT_ITEM_TYPE)
+                        .withValue(Photo.PHOTO, imageByteArrayOutputStream.toByteArray())
+                        .build());
+
+            } catch (IOException e) {
+                // do nothing - if image url is not good - than ignore it.
+            }
+
+        }
+
         contentResolver.applyBatch(ContactsContract.AUTHORITY, ops);
     }
 
@@ -117,8 +146,11 @@ public class ContactHandler {
         String selection = StructuredName.DISPLAY_NAME + " = ?";
         String[] selectionArguments = { name };
         Cursor cursor = contentResolver.query(Data.CONTENT_URI, projection, selection, selectionArguments, null);
-
-        return cursor.getCount() > 0;
+        try {
+            return cursor.getCount() > 0;
+        }finally {
+            cursor.close();
+        }
     }
 
     private static List<String> resolveEmailAddresses(ContentResolver contentResolver, String contactId) {

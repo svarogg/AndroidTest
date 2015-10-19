@@ -1,5 +1,6 @@
 package com.example.mike.androidtest;
 
+import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -75,6 +76,12 @@ public class ContactListActivity extends AppCompatActivity {
 
     private void loadContactsFromServer() {
         final ContactListActivity context = this;
+
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setTitle("Loading contacts from server");
+        progress.setMessage("Please wait...");
+        progress.show();
+
         ContactHandler.loadFromServer(this.getBaseContext(), new ObjToVoidFunctor<List<Contact>>() {
             @Override
             public void execute(List<Contact> contacts) {
@@ -83,16 +90,20 @@ public class ContactListActivity extends AppCompatActivity {
                         try {
                             ContactHandler.addContact(context, contact);
                         }catch(Exception e){
+                            e.printStackTrace();
                             Toast.makeText(context, "Failed to add contacts to contact list", Toast.LENGTH_SHORT).show();
+                            progress.dismiss();
                             return;
                         }
                     }
                 }
                 updateContactsList();
+                progress.dismiss();
             }
         }, new ObjToVoidFunctor<Exception>() {
             @Override
-            public void execute(Exception arg) {
+            public void execute(Exception e) {
+                e.printStackTrace();
                 Toast.makeText(context, "Failed to load contacts from server.\nPlease check your internet connection.", Toast.LENGTH_SHORT).show();
             }
         });
