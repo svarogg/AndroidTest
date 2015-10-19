@@ -27,7 +27,7 @@ import java.util.List;
 public class ContactListAdapter extends BaseAdapter {
     Context context;
     List<Contact> contacts;
-    private static LayoutInflater inflater;
+    private LayoutInflater inflater;
     private ImageLoader imageLoader;
 
     public ContactListAdapter(Context context, ImageLoader imageLoader, List<Contact> contacts) {

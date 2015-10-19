@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginRight="90dp"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Contact Name"
+            android:id="@+id/contactNameView"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_gravity="center_vertical"/>
+        <ImageView
+            android:id="@+id/contactImageView"
+            android:layout_alignParentRight="true"
+            android:layout_margin="5dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="right"
+            android:src="@mipmap/question_mark"
+            />
+        <com.android.volley.toolbox.NetworkImageView
+            android:id="@+id/contactNetworkImageView"
+            android:layout_alignParentRight="true"
+            android:layout_margin="5dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="right"
+            android:src="@mipmap/question_mark"
+            android:visibility="gone"
+            />
+    </RelativeLayout>
+    <ListView
+        android:id="@+id/contactDetailsList"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+</LinearLayout>

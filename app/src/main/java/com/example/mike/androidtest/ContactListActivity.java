@@ -27,6 +27,7 @@ import com.example.mike.androidtest.functors.ObjToVoidFunctor;
 import com.example.mike.androidtest.functors.VoidToVoidFunctor;
 import com.example.mike.androidtest.handlers.BlurHandler;
 import com.example.mike.androidtest.handlers.ContactHandler;
+import com.example.mike.androidtest.handlers.IntentHandler;
 import com.example.mike.androidtest.model.Contact;
 
 import java.util.List;
@@ -127,13 +128,12 @@ public class ContactListActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 final Contact contact = context.getContacts().get(position);
 
-                ClipData data = ClipData.newPlainText("phoneNumber", contact.getPhoneNumber());
                 String imageUrl = contact.getImageUrl();
                 View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view.findViewById(
                         imageUrl != null && !imageUrl.startsWith("content://")
                             ? R.id.contactNetworkImageView
                             : R.id.contactImageView));
-                view.startDrag(data, shadowBuilder, view, 0);
+                view.startDrag(ClipData.newPlainText("", ""), shadowBuilder, view, 0);
 
                 onDragMenu.setVisibility(View.VISIBLE);
                 onDragMenu.setBackground(new BitmapDrawable(context.getResources(), BlurHandler.blur(contactListContainer, 1f, 10)));
@@ -143,18 +143,22 @@ public class ContactListActivity extends AppCompatActivity {
                 if(contact.hasPhoneNumber()) {
                     dragText.setText("");
                     dragButtonsContainer.setVisibility(View.VISIBLE);
+
+                    final String phoneNumber = contact.getPhoneNumbers().get(0);
+
                     View callButton = onDragMenu.findViewById(R.id.callDragButton);
-                    View smsButton = onDragMenu.findViewById(R.id.smsDragButton);
                     setDragEvent(callButton, onDragMenu, dragText, "Call", new VoidToVoidFunctor() {
                         @Override
                         public void execute() {
-                            ContactHandler.callContact(context, contact);
+                            IntentHandler.call(context, phoneNumber);
                         }
                     });
+
+                    View smsButton = onDragMenu.findViewById(R.id.smsDragButton);
                     setDragEvent(smsButton, onDragMenu, dragText, "SMS", new VoidToVoidFunctor() {
                         @Override
                         public void execute() {
-                            ContactHandler.smsContact(context, contact);
+                            IntentHandler.sendSms(context, phoneNumber);
                         }
                     });
                 }else{

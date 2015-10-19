@@ -54,14 +54,14 @@ public class ContactHandler {
 
             Contact.Loader emailAddressLoader = new Contact.Loader() {
                 @Override
-                public String loadString(int contactId) {
-                    return resolveEmailAddress(contentResolver, Integer.toString(contactId));
+                public List<String> loadList(int contactId) {
+                    return resolveEmailAddresses(contentResolver, Integer.toString(contactId));
                 }
             };
             Contact.Loader phoneNumberLoader = new Contact.Loader() {
                 @Override
-                public String loadString(int contactId) {
-                    return resolvePhoneNumber(contentResolver, Integer.toString(contactId));
+                public List<String> loadList(int contactId) {
+                    return resolvePhoneNumbers(contentResolver, Integer.toString(contactId));
                 }
             };
 
@@ -71,56 +71,36 @@ public class ContactHandler {
         return contacts;
     }
 
-    private static String resolveEmailAddress(ContentResolver contentResolver, String contactId) {
-        Cursor emailCursor = contentResolver.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI, null,
+    private static List<String> resolveEmailAddresses(ContentResolver contentResolver, String contactId) {
+        Cursor emailAddressCursor = contentResolver.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI, null,
                 ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{contactId}, null);
+        int emailAddressIndex = emailAddressCursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS);
+
         try {
-            return emailCursor.moveToFirst()
-                    ? emailCursor.getString(emailCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                    : null;
+            List<String> emailAddresses = new LinkedList<>();
+            while(emailAddressCursor.moveToNext()){
+                emailAddresses.add(emailAddressCursor.getString(emailAddressIndex));
+            }
+            return emailAddresses;
         } finally {
-            emailCursor.close();
+            emailAddressCursor.close();
         }
     }
 
-    private static String resolvePhoneNumber(ContentResolver contentResolver, String contactId) {
+    private static List<String> resolvePhoneNumbers(ContentResolver contentResolver, String contactId) {
         Cursor phoneNumberCursor = contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                 ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{contactId}, null);
+        int phoneNumberIndex = phoneNumberCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
 
         try {
-            return phoneNumberCursor.moveToFirst()
-                    ? phoneNumberCursor.getString(phoneNumberCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                    : null;
+            List<String> phoneNumbers = new LinkedList<>();
+            while(phoneNumberCursor.moveToNext()){
+                phoneNumbers.add(phoneNumberCursor.getString(phoneNumberIndex));
+            }
+            return phoneNumbers;
         } finally {
             phoneNumberCursor.close();
         }
-    }
-
-    public static void emailContact(Context context, Contact contact) {
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("message/rfc822");
-        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{contact.getEmailAddress()});
-
-        context.startActivity(intent);
-    }
-
-    public static void smsContact(Context context, Contact contact) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("sms:" + contact.getPhoneNumber()));
-
-        context.startActivity(intent);
-    }
-
-    public static void callContact(Context context, Contact contact) {
-        if (context.checkCallingOrSelfPermission("android.permission.CALL_PHONE") != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(context, "User denied permission to call contact", Toast.LENGTH_SHORT);
-            return;
-        }
-
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        intent.setData(Uri.parse("tel:" + contact.getPhoneNumber()));
-
-        context.startActivity(intent);
     }
 
     public static void loadFromServer(Context context, final ObjToVoidFunctor<List<Contact>> successCallback, final ObjToVoidFunctor<Exception> errorCallback) {

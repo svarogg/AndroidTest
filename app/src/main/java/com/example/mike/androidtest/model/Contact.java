@@ -5,6 +5,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by Mike on 14/10/2015.
@@ -12,8 +15,8 @@ import java.io.Serializable;
 public class Contact implements Parcelable, Serializable {
     private int id;
     private String name;
-    private String phoneNumber;
-    private String emailAddress;
+    private List<String> phoneNumbers;
+    private List<String> emailAddresses;
     private String imageUrl;
 
     private Loader emailLoader;
@@ -22,8 +25,8 @@ public class Contact implements Parcelable, Serializable {
     protected Contact(Parcel in) {
         id = in.readInt();
         name = in.readString();
-        phoneNumber = in.readString();
-        emailAddress = in.readString();
+        phoneNumbers = in.readArrayList(String.class.getClassLoader());
+        emailAddresses = in.readArrayList(String.class.getClassLoader());
         imageUrl = in.readString();
     }
 
@@ -48,20 +51,20 @@ public class Contact implements Parcelable, Serializable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(id);
         dest.writeString(name);
-        dest.writeString(phoneNumber);
-        dest.writeString(emailAddress);
+        dest.writeList(phoneNumbers);
+        dest.writeList(emailAddresses);
         dest.writeString(imageUrl);
     }
 
     public interface Loader{
-        public String loadString(int contactId);
+        public List<String> loadList(int contactId);
     }
 
     public Contact(int id, String name, String imageUrl, String emailAddress, String phoneNumber){
         this.id = id;
         this.name = name;
-        this.emailAddress = emailAddress;
-        this.phoneNumber = phoneNumber;
+        this.emailAddresses = new LinkedList<>(Arrays.asList(emailAddress)) ;
+        this.phoneNumbers = new LinkedList<>(Arrays.asList(phoneNumber));
         this.imageUrl = imageUrl;
     }
 
@@ -73,27 +76,35 @@ public class Contact implements Parcelable, Serializable {
         this.imageUrl = imageUrl;
     }
 
-    public String getEmailAddress() {
-        if(emailAddress == null && emailLoader != null){
-            setEmailAddress(emailLoader.loadString(id));
+    public List<String> getEmailAddresses() {
+        if(emailAddresses == null){
+            if(emailLoader != null) {
+                setEmailAddresses(emailLoader.loadList(id));
+            }else{
+                setEmailAddresses(new LinkedList<String>());
+            }
         }
-        return emailAddress;
+        return emailAddresses;
     }
 
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
+    public void setEmailAddresses(List<String> emailAddresses) {
+        this.emailAddresses = emailAddresses;
     }
 
-    public String getPhoneNumber() {
-        if(phoneNumber == null && phoneNumberLoader != null){
-            setPhoneNumber(phoneNumberLoader.loadString(id));
+    public List<String> getPhoneNumbers() {
+        if(phoneNumbers == null){
+            if(phoneNumberLoader != null) {
+                setPhoneNumbers(phoneNumberLoader.loadList(id));
+            }else{
+                setPhoneNumbers(new LinkedList<String>());
+            }
         }
 
-        return phoneNumber;
+        return phoneNumbers;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhoneNumbers(List<String> phoneNumbers) {
+        this.phoneNumbers = phoneNumbers;
     }
 
     public String getName() {
@@ -121,11 +132,13 @@ public class Contact implements Parcelable, Serializable {
     }
 
     public boolean hasPhoneNumber(){
-        return getPhoneNumber() != null;
+        List<String> phoneNumbers = getPhoneNumbers();
+        return phoneNumbers.size() > 0;
     }
 
     public boolean hasEmailAddress(){
-        return getEmailAddress() != null;
+        List<String> emailAddresses = getEmailAddresses();
+        return emailAddresses.size() > 0;
     }
 
 }

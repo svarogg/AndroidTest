@@ -8,10 +8,13 @@ import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
+import com.example.mike.androidtest.adapters.ContactDetailsAdapter;
+import com.example.mike.androidtest.adapters.ContactListAdapter;
 import com.example.mike.androidtest.handlers.ContactHandler;
 import com.example.mike.androidtest.model.Contact;
 
@@ -37,41 +40,8 @@ public class ContactDialogFragment extends DialogFragment {
         final Contact contact = (Contact)getArguments().getSerializable(CONTACT_KEY);
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
-        View layout = inflater.inflate(R.layout.contact_details, null);
+        View layout = inflater.inflate(R.layout.contact_details_dialog, null);
         ((TextView)layout.findViewById(R.id.contactNameView)).setText(contact.getName());
-
-        String phoneNumber = contact.getPhoneNumber();
-        if(phoneNumber != null){
-            ((TextView)layout.findViewById(R.id.phoneNumberView)).setText(phoneNumber);
-            layout.findViewById(R.id.callButton).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ContactHandler.callContact(getContext(), contact);
-                }
-            });
-
-            layout.findViewById(R.id.smsButton).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ContactHandler.smsContact(getContext(), contact);
-                }
-            });
-        }else{
-            layout.findViewById(R.id.phoneNumberContainer).setVisibility(View.GONE);
-        }
-
-        String emailAddress = contact.getEmailAddress();
-        if(emailAddress != null){
-            ((TextView)layout.findViewById(R.id.emailAddressView)).setText(emailAddress);
-            layout.findViewById(R.id.emailButton).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ContactHandler.emailContact(getContext(), contact);
-                }
-            });
-        }else{
-            layout.findViewById(R.id.emailAddressContainer).setVisibility(View.GONE);
-        }
 
         String imageUrl = contact.getImageUrl();
         ImageView contactImageView = (ImageView)layout.findViewById(R.id.contactImageView);
@@ -85,6 +55,10 @@ public class ContactDialogFragment extends DialogFragment {
                 contactNetworkImageView.setImageUrl(imageUrl, imageLoader);
             }
         }
+
+        ContactDetailsAdapter contactDetailsAdapter = new ContactDetailsAdapter(getContext(), contact);
+        ListView contactDetailsList = (ListView)layout.findViewById(R.id.contactDetailsList);
+        contactDetailsList.setAdapter(contactDetailsAdapter);
 
         builder.setView(layout);
 
